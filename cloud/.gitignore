@@ -1,0 +1,8 @@
+* IntelliJ related
+*.iml
+*.ipr
+*.iws
+.idea/
+
+# Node
+node_modules/
