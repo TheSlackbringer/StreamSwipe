@@ -96,6 +96,7 @@ class _SwipeCardWidgetState extends State<SwipeCardWidget>
       child: Stack(
         alignment: Alignment.center,
         children: [
+          // Card Image
           Transform.translate(
             offset: cardOffset,
             child: Container(
@@ -108,75 +109,84 @@ class _SwipeCardWidgetState extends State<SwipeCardWidget>
               ),
             ),
           ),
+          
+          // "About" Button - This is always present and moves with the card
           Positioned(
             bottom: 10,
-            child: ElevatedButton(
-              onPressed: toggleTextVisibility,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.grey.withOpacity(0.9),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-              child: const Text(
-                "About",
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
+            child: Transform.translate(
+              offset: cardOffset,  // Button moves with the card
+              child: ElevatedButton(
+                onPressed: toggleTextVisibility,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.grey.withOpacity(0.9),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
                   ),
+                ),
+                child: const Text(
+                  "About",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,  // Make the text bold
+                  ),
+                ),
               ),
             ),
           ),
+  
+          // Text Box (appears when `showText` is true)
           if (showText)
-          Positioned.fill(
-            child: FadeTransition(
-              opacity: _fadeAnimation,
-              child: SlideTransition(
-                position: _slideAnimation,
-                child: Transform.translate(
-                  offset: cardOffset,
-                  child: Stack(
-                    children: [
-                      Container(
-                        decoration: BoxDecoration(
-                          color: Colors.black.withOpacity(0.7),
-                          borderRadius: BorderRadius.circular(15),
-                        ),
-                        padding: const EdgeInsets.all(16),
-                        child: Column(
-                          children: [
-                            // Add extra padding to the top to avoid the dismiss button overlap
-                            const SizedBox(height: 40), // Adjust this value as needed
-                            Expanded(
-                              child: SingleChildScrollView(
-                                physics: const BouncingScrollPhysics(),
-                                child: Text(
-                                  widget.text,
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 18,
+            Positioned.fill(
+              child: FadeTransition(
+                opacity: _fadeAnimation,
+                child: SlideTransition(
+                  position: _slideAnimation,
+                  child: Transform.translate(
+                    offset: cardOffset,  // Text box moves with the card
+                    child: Stack(
+                      children: [
+                        // Text box background with padding
+                        Container(
+                          decoration: BoxDecoration(
+                            color: Colors.black.withOpacity(0.7),
+                            borderRadius: BorderRadius.circular(15),
+                          ),
+                          padding: const EdgeInsets.all(16),
+                          child: Column(
+                            children: [
+                              // Extra padding to avoid text behind the dismiss button
+                              const SizedBox(height: 40),  // Adjust as needed
+                              Expanded(
+                                child: SingleChildScrollView(
+                                  physics: const BouncingScrollPhysics(),
+                                  child: Text(
+                                    widget.text,
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 18,
+                                    ),
+                                    textAlign: TextAlign.center,
                                   ),
-                                  textAlign: TextAlign.center,
                                 ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
-                      ),
-                      Positioned(
-                        top: 8,
-                        right: 8,
-                        child: IconButton(
-                          onPressed: toggleTextVisibility,
-                          icon: const Icon(Icons.close, color: Colors.white),
+                        // Dismiss Button
+                        Positioned(
+                          top: 8,
+                          right: 8,
+                          child: IconButton(
+                            onPressed: toggleTextVisibility,
+                            icon: const Icon(Icons.close, color: Colors.white),
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),
             ),
-          ),
         ],
       ),
     );
