@@ -29,7 +29,7 @@ class _StreamSwipePageState extends State<StreamSwipePage> {
 
   Future<List<Map<String, String>>> fetchMovies() async {
     try {
-      final response = await _supabase.functions.invoke('get-movies');
+      final response = await _supabase.functions.invoke('get_movies');
 
       final data = response.data as Map<String, dynamic>;
       final results = data['movies']['results'] as List<dynamic>;
