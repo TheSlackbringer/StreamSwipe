@@ -108,6 +108,7 @@ class _StreamSwipePageState extends State<StreamSwipePage> {
                 child: SwipeCardWidget(
                   title: cardData["title"]!,
                   rating: cardData["voteAverage"],
+                  year: cardData["releaseDate"]?.substring(0, 4),
                   description: "Placeholder text for description..",
                   imageUrl: cardData["imageUrl"]!,
                   onSwipeRight: () {

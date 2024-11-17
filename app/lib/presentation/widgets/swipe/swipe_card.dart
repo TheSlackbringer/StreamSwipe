@@ -3,8 +3,9 @@ import 'package:flutter/material.dart';
 class SwipeCardWidget extends StatefulWidget {
   final String title;
   final String description;
-  final String? rating; // Rating is expected to be a string, e.g., "4.5"
+  final String? rating;
   final String imageUrl;
+  final String? year; 
   final VoidCallback onSwipeRight;
   final VoidCallback onSwipeLeft;
 
@@ -14,6 +15,7 @@ class SwipeCardWidget extends StatefulWidget {
     required this.description,
     required this.rating,
     required this.imageUrl,
+    required this.year,
     required this.onSwipeRight,
     required this.onSwipeLeft,
   });
@@ -98,12 +100,12 @@ class _SwipeCardWidgetState extends State<SwipeCardWidget>
   }
 
   Widget _buildCard() {
-    return CardImage(imageUrl: widget.imageUrl, title: widget.title, rating: widget.rating);
+    return CardImage(imageUrl: widget.imageUrl, title: widget.title, rating: widget.rating, year: widget.year,);
   }
 
   Widget _buildAboutButton() {
     return Positioned(
-      bottom: 10,
+      bottom: 5,
       child: Transform.translate(
         offset: cardOffset,
         child: ElevatedButton(
@@ -146,11 +148,13 @@ class CardImage extends StatelessWidget {
   final String imageUrl;
   final String title;
   final String? rating;
+  final String? year; // New year parameter
 
   const CardImage({
     required this.imageUrl,
     required this.title,
     required this.rating,
+    required this.year, // New year parameter
     Key? key,
   }) : super(key: key);
 
@@ -200,7 +204,7 @@ class CardImage extends StatelessWidget {
           ),
           // Title at the bottom left of the card
           Positioned(
-            bottom: 45, // Adjust to add space from the bottom
+            bottom: 55, // Adjust to add space from the bottom
             left: 16, // Align to the left
             child: Text(
               title,
@@ -218,9 +222,29 @@ class CardImage extends StatelessWidget {
               textAlign: TextAlign.left,
             ),
           ),
+          // Movie Year in parentheses above the title
+          Positioned(
+            bottom: 80, // Position above the title
+            left: 16, // Align to the left
+            child: Text(
+              '($year)', // Display the year in parentheses
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 14, // Smaller font size for the year
+                fontWeight: FontWeight.bold,
+                shadows: [
+                  Shadow(
+                    color: Colors.black,
+                    blurRadius: 4,
+                  ),
+                ],
+              ),
+              textAlign: TextAlign.left,
+            ),
+          ),
           // Movie Average Rating as stars below the title
           Positioned(
-            bottom: 20, // Positioning the rating just below the title
+            bottom: 40, // Positioning the rating just below the title
             left: 16, // Align to the left
             child: Row(
               children: [
@@ -235,20 +259,20 @@ class CardImage extends StatelessWidget {
 
   // Method to build the star rating, ensuring a maximum of 5 stars
   Widget _buildStarRating(double rating) {
-  int fullStars = rating.floor();
-  bool hasHalfStar = rating - fullStars >= 0.5;
-  int emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
+    int fullStars = rating.floor();
+    bool hasHalfStar = rating - fullStars >= 0.5;
+    int emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
 
-  return Row(
-    children: [
-      for (int i = 0; i < fullStars; i++)
-        Icon(Icons.star, color: Colors.yellow, size: 16.8), // Reduced size
-      if (hasHalfStar)
-        Icon(Icons.star_half, color: Colors.yellow, size: 16.8), // Reduced size
-      for (int i = 0; i < emptyStars; i++)
-        Icon(Icons.star_border, color: Colors.yellow, size: 16.8), // Reduced size
-    ],
-  );
+    return Row(
+      children: [
+        for (int i = 0; i < fullStars; i++)
+          Icon(Icons.star, color: Colors.yellow, size: 16.8), // Reduced size
+        if (hasHalfStar)
+          Icon(Icons.star_half, color: Colors.yellow, size: 16.8), // Reduced size
+        for (int i = 0; i < emptyStars; i++)
+          Icon(Icons.star_border, color: Colors.yellow, size: 16.8), // Reduced size
+      ],
+    );
   }
 }
 
