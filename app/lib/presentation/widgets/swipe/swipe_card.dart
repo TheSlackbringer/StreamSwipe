@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 class SwipeCardWidget extends StatefulWidget {
   final String title;
   final String description;
+  final String? rating; // Rating is expected to be a string, e.g., "4.5"
   final String imageUrl;
   final VoidCallback onSwipeRight;
   final VoidCallback onSwipeLeft;
@@ -11,6 +12,7 @@ class SwipeCardWidget extends StatefulWidget {
     super.key,
     required this.title,
     required this.description,
+    required this.rating,
     required this.imageUrl,
     required this.onSwipeRight,
     required this.onSwipeLeft,
@@ -36,19 +38,11 @@ class _SwipeCardWidgetState extends State<SwipeCardWidget>
       vsync: this,
     );
 
-    _slideAnimation = Tween<Offset>(
-      begin: const Offset(0, 0.5),
-      end: Offset.zero,
-    ).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
+    _slideAnimation = Tween<Offset>(begin: const Offset(0, 0.5), end: Offset.zero)
+        .animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
 
-    _fadeAnimation = Tween<double>(
-      begin: 0,
-      end: 1,
-    ).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
+    _fadeAnimation = Tween<double>(begin: 0, end: 1)
+        .animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
   }
 
   @override
@@ -96,7 +90,7 @@ class _SwipeCardWidgetState extends State<SwipeCardWidget>
         clipBehavior: Clip.hardEdge,
         children: [
           Transform.translate(offset: cardOffset, child: _buildCard()),
-          if (showText) _buildOverlay(),
+          if (showText) _buildTextOverlay(),
           _buildAboutButton(),
         ],
       ),
@@ -104,7 +98,7 @@ class _SwipeCardWidgetState extends State<SwipeCardWidget>
   }
 
   Widget _buildCard() {
-    return CardImage(imageUrl: widget.imageUrl);
+    return CardImage(imageUrl: widget.imageUrl, title: widget.title, rating: widget.rating);
   }
 
   Widget _buildAboutButton() {
@@ -132,7 +126,7 @@ class _SwipeCardWidgetState extends State<SwipeCardWidget>
     );
   }
 
-  Widget _buildOverlay() {
+  Widget _buildTextOverlay() {
     return Transform.translate(
       offset: cardOffset,
       child: Positioned.fill(
@@ -150,11 +144,27 @@ class _SwipeCardWidgetState extends State<SwipeCardWidget>
 
 class CardImage extends StatelessWidget {
   final String imageUrl;
+  final String title;
+  final String? rating;
 
-  const CardImage({required this.imageUrl, Key? key}) : super(key: key);
+  const CardImage({
+    required this.imageUrl,
+    required this.title,
+    required this.rating,
+    Key? key,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    // Parse the rating to a double and ensure it's within the 0.0 to 10.0 range
+    double? numericRating = double.tryParse(rating ?? '0');
+    numericRating = numericRating != null && numericRating > 10.0
+        ? 10.0
+        : numericRating ?? 0.0;
+
+    // Convert the rating to a 5-star scale by dividing by 2
+    double scaledRating = numericRating! / 2;
+
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(15),
@@ -163,7 +173,82 @@ class CardImage extends StatelessWidget {
           fit: BoxFit.cover,
         ),
       ),
+      child: Stack(
+        alignment: Alignment.bottomLeft, // Align title and rating to the bottom left
+        children: [
+          // Fading shadow at the bottom (fade at top, solid black at bottom)
+          Positioned.fill(
+            child: Align(
+              alignment: Alignment.bottomCenter,
+              child: Container(
+                height: MediaQuery.of(context).size.height * 0.20, // Bottom 20% of the card
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.vertical(bottom: Radius.circular(15)),
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Colors.transparent,
+                      Colors.black.withOpacity(1), // Fade to black
+                      Colors.black, // Solid black at the bottom
+                    ],
+                    stops: [0.0, 0.7, 1.0], // Fade quickly, then solid black
+                  ),
+                ),
+              ),
+            ),
+          ),
+          // Title at the bottom left of the card
+          Positioned(
+            bottom: 45, // Adjust to add space from the bottom
+            left: 16, // Align to the left
+            child: Text(
+              title,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                shadows: [
+                  Shadow(
+                    color: Colors.black,
+                    blurRadius: 4,
+                  ),
+                ],
+              ),
+              textAlign: TextAlign.left,
+            ),
+          ),
+          // Movie Average Rating as stars below the title
+          Positioned(
+            bottom: 20, // Positioning the rating just below the title
+            left: 16, // Align to the left
+            child: Row(
+              children: [
+                _buildStarRating(scaledRating), // Use the scaled 5-star rating
+              ],
+            ),
+          ),
+        ],
+      ),
     );
+  }
+
+  // Method to build the star rating, ensuring a maximum of 5 stars
+  Widget _buildStarRating(double rating) {
+  int fullStars = rating.floor();
+  bool hasHalfStar = rating - fullStars >= 0.5;
+  int emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
+
+  return Row(
+    children: [
+      for (int i = 0; i < fullStars; i++)
+        Icon(Icons.star, color: Colors.yellow, size: 16.8), // Reduced size
+      if (hasHalfStar)
+        Icon(Icons.star_half, color: Colors.yellow, size: 16.8), // Reduced size
+      for (int i = 0; i < emptyStars; i++)
+        Icon(Icons.star_border, color: Colors.yellow, size: 16.8), // Reduced size
+    ],
+  );
   }
 }
 
