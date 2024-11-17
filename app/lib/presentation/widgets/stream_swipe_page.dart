@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'swipe/swipe_card.dart';
 
@@ -10,23 +11,49 @@ class StreamSwipePage extends StatefulWidget {
 }
 
 class _StreamSwipePageState extends State<StreamSwipePage> {
-  List<Map<String, String>> cards = [
-    {
-      "text": "A billionaire industrialist and genius inventor, Tony Stark (Robert Downey Jr.), is conducting weapons tests overseas, but terrorists kidnap him to force him to build a devastating weapon. Instead, he builds an armored suit and upends his captors. Returning to America, Stark refines the suit and uses it to combat crime and terrorism.",
-      "imageUrl":
-      'https://m.media-amazon.com/images/M/MV5BMTczNTI2ODUwOF5BMl5BanBnXkFtZTcwMTU0NTIzMw@@._V1_QL75_UX280_CR0,0,280,414_.jpg',
-    },
-    {
-      "text": "With the world now aware that he is Iron Man, billionaire inventor Tony Stark (Robert Downey Jr.) faces pressure from all sides to share his technology with the military. He is reluctant to divulge the secrets of his armored suit, fearing the information will fall into the wrong hands. With Pepper Potts (Gwyneth Paltrow) and 'Rhodey' Rhodes (Don Cheadle) by his side, Tony must forge new alliances and confront a powerful new enemy.",
-      "imageUrl":
-      'https://m.media-amazon.com/images/M/MV5BYWYyOGQzOGYtMGQ1My00ZWYxLTgzZjktZWYzN2IwYjkxYzM0XkEyXkFqcGc@._V1_FMjpg_UX1200_.jpg',
-    },
-    {
-      "text": "MEEEEEGET LANG TEXT When Tony Stark's world is torn apart by a formidable terrorist called the Mandarin, he starts an odyssey of rebuilding and retribution. When Tony Stark's world is torn apart by a formidable terrorist called the Mandarin, he starts an odyssey of rebuilding and retribution. When Tony Stark's world is torn apart by a formidable terrorist called the Mandarin, he starts an odyssey of rebuilding and retribution. When Tony Stark's world is torn apart by a formidable terrorist called the Mandarin, he starts an odyssey of rebuilding and retribution. When Tony Stark's world is torn apart by a formidable terrorist called the Mandarin, he starts an odyssey of rebuilding and retribution.",
-      "imageUrl":
-      "https://m.media-amazon.com/images/M/MV5BMjIzMzAzMjQyM15BMl5BanBnXkFtZTcwNzM2NjcyOQ@@._V1_FMjpg_UY2048_.jpg",
-    },
-  ];
+  final _supabase = Supabase.instance.client;
+  List<Map<String, String>>? _fetchedCards; // To store fetched cards
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCards(); // Fetch data once
+  }
+
+  Future<void> _loadCards() async {
+    final cards = await fetchMovies();
+    setState(() {
+      _fetchedCards = cards; // Store fetched cards
+    });
+  }
+
+  Future<List<Map<String, String>>> fetchMovies() async {
+    try {
+      final response = await _supabase.functions.invoke('get-movies');
+
+      final data = response.data as Map<String, dynamic>;
+      final results = data['movies']['results'] as List<dynamic>;
+
+      return results.map((movie) {
+        final movieMap = movie as Map<String, dynamic>;
+        return {
+          "text": movieMap['title']?.toString() ?? "No title available",
+          "imageUrl": movieMap['poster_path'] != null
+              ? "https://image.tmdb.org/t/p/w500${movieMap['poster_path']}"
+              : "https://placehold.co/500",
+        };
+      }).toList().cast<Map<String, String>>();
+    } catch (e) {
+      debugPrint('Exception calling Edge Function: $e');
+      return [];
+    }
+  }
+
+  void removeTopCard() {
+    setState(() {
+      _fetchedCards?.removeAt(0);
+    });
+  }
 
   void showCustomSnackBar(BuildContext context, String message) {
     final scaffoldMessenger = ScaffoldMessenger.of(context);
@@ -43,20 +70,12 @@ class _StreamSwipePageState extends State<StreamSwipePage> {
     );
   }
 
-  void removeTopCard() {
-    setState(() {
-      cards.removeAt(0);
-    });
-  }
-
   void onSwipeRight() {
-    // Logic for right swipe
     showCustomSnackBar(context, 'Swiped Right!');
     removeTopCard();
   }
 
   void onSwipeLeft() {
-    // Logic for left swipe
     showCustomSnackBar(context, 'Swiped Left!');
     removeTopCard();
   }
@@ -68,14 +87,16 @@ class _StreamSwipePageState extends State<StreamSwipePage> {
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         title: const Text("StreamSwipe"),
       ),
-      body: Center(
-        child: cards.isEmpty
-            ? const Text("No more cards!")
-            : SizedBox(
+      body: _fetchedCards == null
+          ? const Center(child: CircularProgressIndicator())
+          : _fetchedCards!.isEmpty
+          ? const Center(child: Text("No more cards!"))
+          : Center(
+        child: SizedBox(
           height: 500,
           width: 350,
           child: Stack(
-            children: cards
+            children: _fetchedCards!
                 .asMap()
                 .entries
                 .map((entry) {
@@ -97,10 +118,7 @@ class _StreamSwipePageState extends State<StreamSwipePage> {
                   },
                 ),
               );
-            })
-                .toList()
-                .reversed
-                .toList(),
+            }).toList().reversed.toList(),
           ),
         ),
       ),

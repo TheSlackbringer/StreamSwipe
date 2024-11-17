@@ -4,10 +4,14 @@
 
 // Setup type definitions for built-in Supabase Runtime APIs
 import "jsr:@supabase/functions-js/edge-runtime.d.ts"
+import { corsHeaders } from '../_shared/cors.ts'
 
 console.log("Hello from Functions!")
 
 Deno.serve(async (req) => {
+       if (req.method === 'OPTIONS') {
+         return new Response('ok', { headers: corsHeaders })
+       }
 try {
 
      const options = {
@@ -33,14 +37,14 @@ try {
     };
 
     return new Response(JSON.stringify(data), {
-      headers: { "Content-Type": "application/json" },
+      headers: {...corsHeaders,"Content-Type": "application/json" },
     });
   } catch (err) {
     console.error("Error fetching movies:", err);
 
     return new Response(
       JSON.stringify({ error: "Failed to fetch movies" }),
-      { headers: { "Content-Type": "application/json" }, status: 500 }
+      { headers: {...corsHeaders, "Content-Type": "application/json" }, status: 500 }
     );
   }
 });
