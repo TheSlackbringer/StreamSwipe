@@ -5,6 +5,7 @@
 // Setup type definitions for built-in Supabase Runtime APIs
 import "jsr:@supabase/functions-js/edge-runtime.d.ts"
 import { corsHeaders } from '../_shared/cors.ts'
+import { TMDBApiUrl  } from '../_shared/constants.ts'
 
 console.log("Hello from Functions!")
 
@@ -23,14 +24,11 @@ try {
       };
 
     const response = await fetch(
-      'https://api.themoviedb.org/3/movie/now_playing?region=DK&page=1',
+      `${TMDBApiUrl}/3/movie/now_playing?region=DK&page=1`,
       options
     );
     const movies = await response.json();
 
-    console.log(options.headers.Authorization)
-    // Extract titles from the movies results
-    //const titles = movies.results.map((movie: { title: string }) => movie.title);
 
     const data = {
       movies, // Return the list of titles
