@@ -21,7 +21,7 @@ Make sure you have docker installed
 - `npx supabase functions serve --env-file ./supabase/.env.deveoplement`
 
 ## Deploy manuallu
-- `npx supabase functions deploy` --Deploys all
+- `npx supabase functions deploy` -Deploys all
 - `npx supabase functions deploy hello-world` - Deploys a single function
 
 
