@@ -18,7 +18,11 @@ All keys must be added to .env.placerholder so we know which env variables we ha
 ## Run Locally
 Make sure you have docker installed
 - `npx supabase start`
-- `supabase functions serve --env-file ./supabase/.env.deveoplement`
+- `npx supabase functions serve --env-file ./supabase/.env.deveoplement`
+
+## Deploy manuallu
+- `npx supabase functions deploy` --Deploys all
+- `npx supabase functions deploy hello-world` - Deploys a single function
 
 
 
