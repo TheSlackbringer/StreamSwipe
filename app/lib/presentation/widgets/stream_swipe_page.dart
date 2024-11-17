@@ -37,7 +37,7 @@ class _StreamSwipePageState extends State<StreamSwipePage> {
       return results.map((movie) {
         final movieMap = movie as Map<String, dynamic>;
         return {
-          "text": movieMap['title']?.toString() ?? "No title available",
+          "title": movieMap['title']?.toString() ?? "No title available",
           "imageUrl": movieMap['poster_path'] != null
               ? "https://image.tmdb.org/t/p/w500${movieMap['poster_path']}"
               : "https://placehold.co/500",
@@ -104,7 +104,8 @@ class _StreamSwipePageState extends State<StreamSwipePage> {
               Map<String, String> cardData = entry.value;
               return Positioned.fill(
                 child: SwipeCardWidget(
-                  text: cardData["text"]!,
+                  title: cardData["title"]!,
+                  description: "Placeholder text for description..",
                   imageUrl: cardData["imageUrl"]!,
                   onSwipeRight: () {
                     if (index == 0) {

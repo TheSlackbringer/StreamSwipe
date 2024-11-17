@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
 
 class SwipeCardWidget extends StatefulWidget {
-  final String text;
+  final String title;
+  final String description;
   final String imageUrl;
   final VoidCallback onSwipeRight;
   final VoidCallback onSwipeLeft;
 
   const SwipeCardWidget({
     super.key,
-    required this.text,
+    required this.title,
+    required this.description,
     required this.imageUrl,
     required this.onSwipeRight,
     required this.onSwipeLeft,
@@ -36,7 +38,7 @@ class _SwipeCardWidgetState extends State<SwipeCardWidget>
 
     _slideAnimation = Tween<Offset>(
       begin: const Offset(0, 0.5),
-      end: const Offset(0, 0),
+      end: Offset.zero,
     ).animate(
       CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
     );
@@ -55,28 +57,6 @@ class _SwipeCardWidgetState extends State<SwipeCardWidget>
     super.dispose();
   }
 
-  void onPanUpdate(DragUpdateDetails details) {
-    setState(() {
-      // Update only the X-coordinate of the cardOffset
-      cardOffset = Offset(cardOffset.dx + details.delta.dx, cardOffset.dy);
-    });
-  }
-
-  void onPanEnd(DragEndDetails details) {
-    if (cardOffset.dx > 150) {
-      // Swiped to the right
-      widget.onSwipeRight();
-    } else if (cardOffset.dx < -150) {
-      // Swiped to the left
-      widget.onSwipeLeft();
-    } else {
-      // Reset position if swipe threshold not met
-      setState(() {
-        cardOffset = Offset.zero;
-      });
-    }
-  }
-
   void toggleTextVisibility() {
     setState(() {
       showText = !showText;
@@ -88,6 +68,24 @@ class _SwipeCardWidgetState extends State<SwipeCardWidget>
     });
   }
 
+  void onPanUpdate(DragUpdateDetails details) {
+    setState(() {
+      cardOffset = Offset(cardOffset.dx + details.delta.dx, cardOffset.dy);
+    });
+  }
+
+  void onPanEnd(DragEndDetails details) {
+    if (cardOffset.dx > 150) {
+      widget.onSwipeRight();
+    } else if (cardOffset.dx < -150) {
+      widget.onSwipeLeft();
+    } else {
+      setState(() {
+        cardOffset = Offset.zero;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
@@ -95,99 +93,157 @@ class _SwipeCardWidgetState extends State<SwipeCardWidget>
       onPanEnd: onPanEnd,
       child: Stack(
         alignment: Alignment.center,
+        clipBehavior: Clip.hardEdge,
         children: [
-          // Card Image
-          Transform.translate(
-            offset: cardOffset,
-            child: Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(15),
-                image: DecorationImage(
-                  image: NetworkImage(widget.imageUrl),
-                  fit: BoxFit.cover,
-                ),
-              ),
-            ),
-          ),
-          
-          // "About" Button - This is always present and moves with the card
-          Positioned(
-            bottom: 10,
-            child: Transform.translate(
-              offset: cardOffset,  // Button moves with the card
-              child: ElevatedButton(
-                onPressed: toggleTextVisibility,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.grey.withOpacity(0.9),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-                child: const Text(
-                  "About",
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,  // Make the text bold
-                  ),
-                ),
-              ),
-            ),
-          ),
-  
-          // Text Box (appears when `showText` is true)
-          if (showText)
-            Positioned.fill(
-              child: FadeTransition(
-                opacity: _fadeAnimation,
-                child: SlideTransition(
-                  position: _slideAnimation,
-                  child: Transform.translate(
-                    offset: cardOffset,  // Text box moves with the card
-                    child: Stack(
-                      children: [
-                        // Text box background with padding
-                        Container(
-                          decoration: BoxDecoration(
-                            color: Colors.black.withOpacity(0.7),
-                            borderRadius: BorderRadius.circular(15),
-                          ),
-                          padding: const EdgeInsets.all(16),
-                          child: Column(
-                            children: [
-                              // Extra padding to avoid text behind the dismiss button
-                              const SizedBox(height: 40),  // Adjust as needed
-                              Expanded(
-                                child: SingleChildScrollView(
-                                  physics: const BouncingScrollPhysics(),
-                                  child: Text(
-                                    widget.text,
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 18,
-                                    ),
-                                    textAlign: TextAlign.center,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        // Dismiss Button
-                        Positioned(
-                          top: 8,
-                          right: 8,
-                          child: IconButton(
-                            onPressed: toggleTextVisibility,
-                            icon: const Icon(Icons.close, color: Colors.white),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
+          Transform.translate(offset: cardOffset, child: _buildCard()),
+          if (showText) _buildOverlay(),
+          _buildAboutButton(),
         ],
+      ),
+    );
+  }
+
+  Widget _buildCard() {
+    return CardImage(imageUrl: widget.imageUrl);
+  }
+
+  Widget _buildAboutButton() {
+    return Positioned(
+      bottom: 10,
+      child: Transform.translate(
+        offset: cardOffset,
+        child: ElevatedButton(
+          onPressed: toggleTextVisibility,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.grey.withOpacity(0.9),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+          ),
+          child: const Text(
+            "About",
+            style: TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildOverlay() {
+    return Transform.translate(
+      offset: cardOffset,
+      child: Positioned.fill(
+        child: TextOverlay(
+          title: widget.title,
+          description: widget.description,
+          fadeAnimation: _fadeAnimation,
+          slideAnimation: _slideAnimation,
+          onClose: toggleTextVisibility,
+        ),
+      ),
+    );
+  }
+}
+
+class CardImage extends StatelessWidget {
+  final String imageUrl;
+
+  const CardImage({required this.imageUrl, Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(15),
+        image: DecorationImage(
+          image: NetworkImage(imageUrl),
+          fit: BoxFit.cover,
+        ),
+      ),
+    );
+  }
+}
+
+class TextOverlay extends StatelessWidget {
+  final String title;
+  final String description;
+  final Animation<double> fadeAnimation;
+  final Animation<Offset> slideAnimation;
+  final VoidCallback onClose;
+
+  const TextOverlay({
+    required this.title,
+    required this.description,
+    required this.fadeAnimation,
+    required this.slideAnimation,
+    required this.onClose,
+    Key? key,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(15),
+      child: FadeTransition(
+        opacity: fadeAnimation,
+        child: SlideTransition(
+          position: slideAnimation,
+          child: Stack(
+            children: [
+              // Background
+              Positioned.fill(
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.black.withOpacity(0.7),
+                    borderRadius: BorderRadius.circular(15),
+                  ),
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      const SizedBox(height: 40), // Space for close button
+                      Text(
+                        title,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 16),
+                      Expanded(
+                        child: SingleChildScrollView(
+                          physics: const BouncingScrollPhysics(),
+                          child: Text(
+                            description,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 18,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              // Close Button
+              Positioned(
+                top: 8,
+                right: 8,
+                child: IconButton(
+                  onPressed: onClose,
+                  icon: const Icon(Icons.close, color: Colors.white),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
