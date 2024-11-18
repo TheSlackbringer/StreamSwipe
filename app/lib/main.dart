@@ -1,3 +1,4 @@
+import 'package:stream_swipe/presentation/dependency_injection.dart';
 import 'package:stream_swipe/presentation/widgets/bottom_navigation_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -8,6 +9,7 @@ Future<void> main() async {
     url: 'https://fxxerkigscucidhukisd.supabase.co',
     anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ4eGVya2lnc2N1Y2lkaHVraXNkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzE3MTg4OTYsImV4cCI6MjA0NzI5NDg5Nn0.66U0A7R7CBtX0jfi-Ub1rQq96Z5lpcam-swZqYeBa4U',
   );
+  setupDI();
   runApp(const MyApp());
 }
 

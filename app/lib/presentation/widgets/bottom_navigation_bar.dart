@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:stream_swipe/presentation/widgets/swipe/user_page.dart';
 import 'home_page.dart';
 import 'stream_swipe_page.dart';
 
@@ -15,7 +16,8 @@ class _BottomNavBarState extends State<BottomNavBar> {
 
   static final List<Widget> _pages = <Widget>[
     const MyHomePage(title: 'Binge Buddy'),
-    const StreamSwipePage()
+    const StreamSwipePage(),
+    const UserSetupPage()
   ];
 
 
@@ -41,13 +43,10 @@ class _BottomNavBarState extends State<BottomNavBar> {
             icon: Badge(child: Icon(Icons.movie)),
             label: 'StreamSwipe',
           ),
- /*         NavigationDestination(
-            icon: Badge(
-              label: Text('2'),
-              child: Icon(Icons.messenger_sharp),
-            ),
-            label: 'Messages',
-          ),*/
+          NavigationDestination(
+            icon: Icon(Icons.account_circle),
+            label: 'User',
+          ),
         ],
       ),
       body: _pages[currentPageIndex],
