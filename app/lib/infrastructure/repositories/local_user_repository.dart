@@ -1,26 +1,19 @@
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
-
 import '../../domain/local_user.dart';
 
 class LocalUserRepository {
   static const _userKey = 'user';
+  final SharedPreferencesAsync prefs = SharedPreferencesAsync();
 
-  // Singleton pattern for shared instance
-  static final LocalUserRepository _instance = LocalUserRepository._internal();
-  factory LocalUserRepository() => _instance;
-  LocalUserRepository._internal();
-
-  /// Save the user to local storage
+  /// Save the user to local storage asynchronously
   Future<void> saveUser(User user) async {
-    final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_userKey, jsonEncode(user.toJson()));
   }
 
-  /// Get the saved user from local storage
+  /// Retrieve the saved user from local storage asynchronously
   Future<User?> getUser() async {
-    final prefs = await SharedPreferences.getInstance();
-    final userString = prefs.getString(_userKey);
+    final userString = await prefs.getString(_userKey);
 
     if (userString != null) {
       final userJson = jsonDecode(userString) as Map<String, dynamic>;
@@ -29,15 +22,13 @@ class LocalUserRepository {
     return null; // Return null if no user is saved
   }
 
-  /// Check if a user is saved in local storage
+  /// Check if a user is saved in local storage asynchronously
   Future<bool> hasUser() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.containsKey(_userKey);
+    return await prefs.containsKey(_userKey);
   }
 
-  /// Delete the saved user
+  /// Delete the saved user asynchronously
   Future<void> deleteUser() async {
-    final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_userKey);
   }
 }

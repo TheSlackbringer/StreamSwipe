@@ -5,22 +5,17 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 class RegionRepository {
   static const _regionMapKey = 'regionMap';
   final supabase = Supabase.instance.client;
+  final SharedPreferencesAsync prefs = SharedPreferencesAsync();
 
-  // Singleton pattern for shared instance
-  static final RegionRepository _instance = RegionRepository._internal();
-  factory RegionRepository() => _instance;
-  RegionRepository._internal();
 
   /// Save the region map to local storage
   Future<void> saveRegionMap(Map<String, String> regionMap) async {
-    final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_regionMapKey, jsonEncode(regionMap));
   }
 
   /// Get the cached region map from local storage
   Future<Map<String, String>> getRegionMap() async {
-    final prefs = await SharedPreferences.getInstance();
-    final mapString = prefs.getString(_regionMapKey);
+    final mapString = await prefs.getString(_regionMapKey);
 
     if (mapString != null) {
       return Map<String, String>.from(jsonDecode(mapString));
