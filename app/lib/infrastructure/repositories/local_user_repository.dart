@@ -7,17 +7,17 @@ class LocalUserRepository {
   final SharedPreferencesAsync prefs = SharedPreferencesAsync();
 
   /// Save the user to local storage asynchronously
-  Future<void> saveUser(User user) async {
+  Future<void> saveUser(LocalUser user) async {
     await prefs.setString(_userKey, jsonEncode(user.toJson()));
   }
 
   /// Retrieve the saved user from local storage asynchronously
-  Future<User?> getUser() async {
+  Future<LocalUser?> getUser() async {
     final userString = await prefs.getString(_userKey);
 
     if (userString != null) {
       final userJson = jsonDecode(userString) as Map<String, dynamic>;
-      return User.fromJson(userJson);
+      return LocalUser.fromJson(userJson);
     }
     return null; // Return null if no user is saved
   }

@@ -46,6 +46,14 @@ class RegionRepository {
     }
   }
 
+  /// Get the inverted region map (code to country name)
+  Future<Map<String, String>> getInvertedRegionMap() async {
+    final regionMap = await ensureRegionMap();
+    // Invert the map: code as key, country name as value
+    final invertedMap = { for (var entry in regionMap.entries) entry.value : entry.key };
+    return invertedMap;
+  }
+
   /// Ensure the region map is cached, fetching from Supabase if necessary
   Future<Map<String, String>> ensureRegionMap() async {
     final cachedRegionMap = await getRegionMap();

@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:stream_swipe/domain/local_user.dart';
+import 'package:stream_swipe/presentation/widgets/swipe/swipe_cards.dart';
 
-import 'swipe/swipe_card.dart';
+import '../../infrastructure/repositories/local_user_repository.dart';
+import '../dependency_injection.dart';
+import 'watch_providers.dart';
 
 class StreamSwipePage extends StatefulWidget {
   const StreamSwipePage({super.key});
@@ -11,122 +14,67 @@ class StreamSwipePage extends StatefulWidget {
 }
 
 class _StreamSwipePageState extends State<StreamSwipePage> {
-  final _supabase = Supabase.instance.client;
-  List<Map<String, String>>? _fetchedCards; // To store fetched cards
+  final LocalUserRepository _localUserRepository = getIt<LocalUserRepository>();
+  LocalUser? _user;
 
   @override
   void initState() {
     super.initState();
-    _loadCards(); // Fetch data once
+    _loadUser();
   }
 
-  Future<void> _loadCards() async {
-    final cards = await fetchMovies();
-    setState(() {
-      _fetchedCards = cards; // Store fetched cards
-    });
-  }
+  Future<void> _loadUser() async {
+    final user = await _localUserRepository.getUser();
 
-  Future<List<Map<String, String>>> fetchMovies() async {
-    try {
-      final response = await _supabase.functions.invoke('get_movies');
-
-      final data = response.data as Map<String, dynamic>;
-      final results = data['movies']['results'] as List<dynamic>;
-
-      return results.map((movie) {
-        final movieMap = movie as Map<String, dynamic>;
-        return {
-          "title": movieMap['title']?.toString() ?? "No title available",
-          "voteAverage": movieMap['vote_average']?.toString() ?? "N/A",
-          "releaseDate": movieMap['release_date']?.toString() ?? "N/A",
-          "imageUrl": movieMap['poster_path'] != null
-              ? "https://image.tmdb.org/t/p/w500${movieMap['poster_path']}"
-              : "https://placehold.co/500",
-        };
-      }).toList().cast<Map<String, String>>();
-    } catch (e) {
-      debugPrint('Exception calling Edge Function: $e');
-      return [];
+    if (mounted) {
+      setState(() {
+        _user = user;
+      });
     }
   }
 
-  void removeTopCard() {
-    setState(() {
-      _fetchedCards?.removeAt(0);
-    });
-  }
+  void _onProvidersSelected() async {
+    // Handle after providers are selected
+    final updatedUser = await _localUserRepository.getUser();
 
-  void showCustomSnackBar(BuildContext context, String message) {
-    final scaffoldMessenger = ScaffoldMessenger.of(context);
-
-    // Dismiss any currently visible SnackBar
-    scaffoldMessenger.hideCurrentSnackBar();
-
-    // Show the new SnackBar
-    scaffoldMessenger.showSnackBar(
-      SnackBar(
-        content: Text(message),
-        duration: const Duration(seconds: 3), // Adjust the duration as needed
-      ),
-    );
-  }
-
-  void onSwipeRight() {
-    showCustomSnackBar(context, 'Swiped Right!');
-    removeTopCard();
-  }
-
-  void onSwipeLeft() {
-    showCustomSnackBar(context, 'Swiped Left!');
-    removeTopCard();
+    if (mounted) {
+      setState(() {
+        _user = updatedUser;
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    if (_user == null) {
+      // Show loading indicator while _user is null
+      return Scaffold(
+        appBar: AppBar(
+          backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+          title: const Text("StreamSwipe"),
+        ),
+        body: const Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
+    // Check if user has selected watch providers
+    if (_user!.watchProviders.isEmpty) {
+      // Show the ProviderSelectionWidget
+      return ProviderSelectionWidget(
+        user: _user!,
+        onProvidersSelected: _onProvidersSelected,
+      );
+    }
+
+    // Otherwise, show the main content
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         title: const Text("StreamSwipe"),
       ),
-      body: _fetchedCards == null
-          ? const Center(child: CircularProgressIndicator())
-          : _fetchedCards!.isEmpty
-          ? const Center(child: Text("No more cards!"))
-          : Center(
-        child: SizedBox(
-          height: 500,
-          width: 350,
-          child: Stack(
-            children: _fetchedCards!
-                .asMap()
-                .entries
-                .map((entry) {
-              int index = entry.key;
-              Map<String, String> cardData = entry.value;
-              return Positioned.fill(
-                child: SwipeCardWidget(
-                  title: cardData["title"]!,
-                  rating: cardData["voteAverage"],
-                  year: cardData["releaseDate"]?.substring(0, 4),
-                  description: "Placeholder text for description..",
-                  imageUrl: cardData["imageUrl"]!,
-                  onSwipeRight: () {
-                    if (index == 0) {
-                      onSwipeRight();
-                    }
-                  },
-                  onSwipeLeft: () {
-                    if (index == 0) {
-                      onSwipeLeft();
-                    }
-                  },
-                ),
-              );
-            }).toList().reversed.toList(),
-          ),
-        ),
-      ),
+      body: SwipeCardsWidget(user: _user!),
     );
   }
 }

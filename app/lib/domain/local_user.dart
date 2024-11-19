@@ -1,10 +1,10 @@
 import '../infrastructure/repositories/region_repository.dart';
 
-class User {
-  final String country;
-  final List<String> watchProviders;
+class LocalUser {
+   String country;
+   List<String> watchProviders;
 
-  User({
+  LocalUser({
     required this.country,
     required this.watchProviders,
   });
@@ -18,8 +18,8 @@ class User {
   }
 
   /// Create a user object from JSON
-  factory User.fromJson(Map<String, dynamic> json) {
-    return User(
+  factory LocalUser.fromJson(Map<String, dynamic> json) {
+    return LocalUser(
       country: json['country'],
       watchProviders: List<String>.from(json['watchProviders']),
     );

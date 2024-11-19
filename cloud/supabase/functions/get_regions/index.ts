@@ -30,7 +30,7 @@ try {
         }
     const regions = await response.json();
     const regionMapping = regions.results.reduce((map: Record<string, string>, region: any) => {
-      map[region.english_name] = region.iso_3166_1;
+      map[region.native_name] = region.iso_3166_1;
       return map;
     }, {});
 
