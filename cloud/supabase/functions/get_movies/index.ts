@@ -23,8 +23,24 @@ try {
         },
       };
 
+  const url = new URL(req.url);
+    const watchProviders = url.searchParams.get('watch_providers');
+    const region = url.searchParams.get('region');
+
+    if (!watchProviders || !region) {
+        return new Response(
+          JSON.stringify({ error: "No watch providers or region specified" }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
+        );
+      }
+
+   const queryParams = new URLSearchParams({
+        with_watch_providers: watchProviders,
+        watch_region: region
+      });
+
     const response = await fetch(
-      `${TMDBApiUrl}/3/movie/now_playing?region=DK&page=1`,
+      `${TMDBApiUrl}/3/discover/movie?${queryParams.toString()}`,
       options
     );
     const movies = await response.json();

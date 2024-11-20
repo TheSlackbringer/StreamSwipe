@@ -34,7 +34,7 @@ class _SwipeCardsWidgetState extends State<SwipeCardsWidget> {
       final response = await _supabase.functions.invoke(
         'get_movies',
         queryParameters: {
-          'providers': widget.user.watchProviders.join(','),
+          'watch_providers': widget.user.watchProviders.join(','),
           'region': await widget.user.getIsoCode() ?? 'US',
         },
       );
