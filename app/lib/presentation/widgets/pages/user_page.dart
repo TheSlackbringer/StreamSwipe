@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import '../../domain/local_user.dart';
-import '../../infrastructure/repositories/local_user_repository.dart';
-import '../../infrastructure/repositories/region_repository.dart';
-import '../dependency_injection.dart';
+import '../../../domain/local_user.dart';
+import '../../../infrastructure/repositories/local_user_repository.dart';
+import '../../../infrastructure/repositories/region_repository.dart';
+import '../../dependency_injection.dart';
 
 class UserSetupPage extends StatefulWidget {
   const UserSetupPage({Key? key}) : super(key: key);

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:stream_swipe/presentation/widgets/user_page.dart';
-import 'home_page.dart';
-import 'stream_swipe_page.dart';
+import 'package:stream_swipe/presentation/widgets/pages/user_page.dart';
+import 'pages/home_page.dart';
+import 'pages/stream_swipe_page.dart';
 
 
 class BottomNavBar extends StatefulWidget {

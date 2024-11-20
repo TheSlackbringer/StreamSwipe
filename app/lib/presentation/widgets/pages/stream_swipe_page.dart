@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:stream_swipe/domain/local_user.dart';
 import 'package:stream_swipe/presentation/widgets/swipe/swipe_cards.dart';
 
-import '../../infrastructure/repositories/local_user_repository.dart';
-import '../dependency_injection.dart';
-import 'watch_providers.dart';
+import '../../../infrastructure/repositories/local_user_repository.dart';
+import '../../dependency_injection.dart';
+import '../watch_providers.dart';
 
 class StreamSwipePage extends StatefulWidget {
   const StreamSwipePage({super.key});

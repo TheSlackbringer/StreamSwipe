@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import '../../domain/local_user.dart';
-import '../../infrastructure/repositories/local_user_repository.dart';
-import '../../infrastructure/repositories/region_repository.dart';
-import '../dependency_injection.dart'; // If using dependency injection
+import '../../../domain/local_user.dart';
+import '../../../infrastructure/repositories/local_user_repository.dart';
+import '../../../infrastructure/repositories/region_repository.dart';
+import '../../dependency_injection.dart'; // If using dependency injection
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key, required this.title});
