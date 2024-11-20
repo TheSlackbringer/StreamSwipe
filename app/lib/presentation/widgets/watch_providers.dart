@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:stream_swipe/domain/local_user.dart';
+import 'package:stream_swipe/infrastructure/services/watch_provider_service.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../infrastructure/repositories/local_user_repository.dart';
+import '../../infrastructure/repositories/region_repository.dart';
 import '../dependency_injection.dart';
 
 class ProviderSelectionWidget extends StatefulWidget {
@@ -20,6 +22,8 @@ class ProviderSelectionWidget extends StatefulWidget {
 }
 
 class _ProviderSelectionWidgetState extends State<ProviderSelectionWidget> {
+  final WatchProviderService _watchProviderService = getIt<WatchProviderService>();
+
   final _supabase = Supabase.instance.client;
   List<Map<String, dynamic>> _availableProviders = [];
   final Set<String> _selectedProviders = {};
@@ -28,36 +32,28 @@ class _ProviderSelectionWidgetState extends State<ProviderSelectionWidget> {
   @override
   void initState() {
     super.initState();
-    _fetchProviders();
+    getProviders();
   }
 
-  Future<void> _fetchProviders() async {
-    try {
-      final region = await widget.user.getIsoCode() ?? 'US'; // Provide a default value
-      final response = await _supabase.functions.invoke(
-        'get_watch_providers',
-        queryParameters: {'region': region},
-      );
+  Future<void> getProviders() async {
+    setState(() {
+      _isLoading = true;
+    });
 
-      if (response.data != null) {
-        final data = response.data as Map<String, dynamic>;
-        setState(() {
-          _availableProviders = List<Map<String, dynamic>>.from(data['providers']);
-          _isLoading = false;
-        });
-      } else {
-        // Handle the case where no data is returned
-        setState(() {
-          _isLoading = false;
-        });
-        debugPrint('No data received from Supabase Edge Function');
-      }
+    try {
+      final selectedCountry = widget.user.country;
+
+      final providers = await _watchProviderService.fetchProviders(selectedCountry);
+
+      setState(() {
+        _availableProviders = providers;
+      });
     } catch (e) {
+      debugPrint('Error fetching providers: $e');
+    } finally {
       setState(() {
         _isLoading = false;
       });
-      // Handle the error, e.g., show an error message
-      debugPrint('Error fetching providers: $e');
     }
   }
 

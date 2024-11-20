@@ -67,4 +67,9 @@ class RegionRepository {
     await saveRegionMap(fetchedRegionMap);
     return fetchedRegionMap;
   }
+
+  Future<String?> getIsoCode(String country) async {
+    final regionMap = await ensureRegionMap();
+    return regionMap[country];
+  }
 }

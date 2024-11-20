@@ -24,11 +24,4 @@ class LocalUser {
       watchProviders: List<String>.from(json['watchProviders']),
     );
   }
-
-  /// Lookup ISO code from the region repository
-  Future<String?> getIsoCode() async {
-    final regionRepository = RegionRepository();
-    final regionMap = await regionRepository.getRegionMap();
-    return regionMap[country];
-  }
 }

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../../infrastructure/repositories/region_repository.dart';
+import '../../dependency_injection.dart';
 import 'swipe_card.dart';
 import '../../../domain/local_user.dart';
 
@@ -13,6 +15,7 @@ class SwipeCardsWidget extends StatefulWidget {
 }
 
 class _SwipeCardsWidgetState extends State<SwipeCardsWidget> {
+  final RegionRepository _regionRepository = getIt<RegionRepository>();
   final _supabase = Supabase.instance.client;
   List<Map<String, String>>? _fetchedCards;
 
@@ -35,7 +38,7 @@ class _SwipeCardsWidgetState extends State<SwipeCardsWidget> {
         'get_movies',
         queryParameters: {
           'watch_providers': widget.user.watchProviders.join('|'),
-          'region': await widget.user.getIsoCode() ?? 'US',
+          'region': await _regionRepository.getIsoCode(widget.user.country) ?? 'US'
         },
       );
 
