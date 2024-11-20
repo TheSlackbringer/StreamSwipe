@@ -99,7 +99,22 @@ class _ProviderSelectionWidgetState extends State<ProviderSelectionWidget> {
                 itemBuilder: (context, index) {
                   final provider = _availableProviders[index];
                   return CheckboxListTile(
-                    title: Text(provider['provider_name']),
+                    title: Row(
+                      children: [
+                        provider['logo_path'] != null
+                            ? Image.network(
+                          'https://image.tmdb.org/t/p/w92${provider['logo_path']}',
+                          width: 40,
+                          height: 40,
+                          fit: BoxFit.cover,
+                        )
+                            : const SizedBox(width: 40, height: 40), // Placeholder if no logo is available
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(provider['provider_name']),
+                        ),
+                      ],
+                    ),
                     value: _selectedProviders.contains(provider['provider_id'].toString()),
                     onChanged: (bool? selected) {
                       setState(() {
