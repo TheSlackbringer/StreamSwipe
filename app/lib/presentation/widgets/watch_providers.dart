@@ -81,9 +81,6 @@ class _ProviderSelectionWidgetState extends State<ProviderSelectionWidget> {
     }
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Choose Your Streaming Providers"),
-      ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -136,6 +133,10 @@ class _ProviderSelectionWidgetState extends State<ProviderSelectionWidget> {
                   : () async {
                 await _saveSelectedProviders();
               },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFFFA500), // Change this to your desired color
+                foregroundColor: Colors.white, // Text color
+              ),
               child: const Text("Save Providers"),
             ),
           ],

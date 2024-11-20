@@ -58,9 +58,6 @@ class _UserSetupPageState extends State<UserSetupPage> {
       final user = LocalUser(country: selectedCountry!, watchProviders: []);
       await userRepository.saveUser(user);
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Country saved successfully!')),
-      );
     }
   }
 
@@ -86,7 +83,7 @@ class _UserSetupPageState extends State<UserSetupPage> {
               isExpanded: true,
               value: selectedCountry,
               hint: const Text('Select your country'),
-              items: availableCountries.map((country) {
+              items: (availableCountries..sort((a, b) => a.compareTo(b))).map((country) {
                 return DropdownMenuItem(
                   value: country,
                   child: Text(country),
@@ -101,6 +98,10 @@ class _UserSetupPageState extends State<UserSetupPage> {
             const SizedBox(height: 24),
             ElevatedButton(
               onPressed: selectedCountry != null ? _saveCountry : null,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFFFA500), // Change this to your desired color
+                foregroundColor: Colors.white, // Text color
+              ),
               child: const Text('Save'),
             ),
           ],
