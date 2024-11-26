@@ -15,7 +15,6 @@ class GoogleSignInButton extends StatelessWidget {
 
     // Define platform-specific dimensions and paddings
     final double buttonHeight = isIOS ? 44.0 : 40.0;
-    final double buttonWidth = 200.0; // Keep width consistent
     final double horizontalPadding = isIOS ? 16.0 : 12.0;
     final double iconTextSpacing = isIOS ? 12.0 : 10.0;
     final double iconSize = 20.0; // Logo size remains 20px
@@ -23,7 +22,7 @@ class GoogleSignInButton extends StatelessWidget {
     final double borderWidth = 1.0; // Remains the same
 
     return SizedBox(
-      width: buttonWidth,
+      width: 200,
       height: buttonHeight,
       child: ElevatedButton(
         onPressed: onPressed,
