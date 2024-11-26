@@ -29,11 +29,13 @@ class SwipeCardWidget extends StatefulWidget {
 class _SwipeCardWidgetState extends State<SwipeCardWidget>
     with SingleTickerProviderStateMixin {
   Offset cardOffset = Offset.zero;
-  Offset startDragOffset = Offset.zero; // Track the start of the drag
+  Offset startDragOffset = Offset.zero;
   bool showText = false;
+  bool isSwipingAway = false; // Tracks if the card is swiping away
   late AnimationController _controller;
-  late Animation<Offset> _slideAnimation;
+  late Animation<Offset> _resetAnimation;
   late Animation<double> _fadeAnimation;
+  double cardOpacity = 1.0;
 
   @override
   void initState() {
@@ -43,11 +45,23 @@ class _SwipeCardWidgetState extends State<SwipeCardWidget>
       vsync: this,
     );
 
-    _slideAnimation = Tween<Offset>(begin: const Offset(0, 0.5), end: Offset.zero)
-        .animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
+    _resetAnimation = Tween<Offset>(begin: Offset.zero, end: Offset.zero)
+        .animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut))
+      ..addListener(() {
+        setState(() {
+          cardOffset = _resetAnimation.value;
+        });
+      });
 
-    _fadeAnimation = Tween<double>(begin: 0, end: 1)
-        .animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
+    _fadeAnimation = Tween<double>(begin: 1.0, end: 0.0)
+        .animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut))
+      ..addListener(() {
+        if (isSwipingAway) {
+          setState(() {
+            cardOpacity = _fadeAnimation.value;
+          });
+        }
+      });
   }
 
   @override
@@ -59,37 +73,69 @@ class _SwipeCardWidgetState extends State<SwipeCardWidget>
   void toggleTextVisibility() {
     setState(() {
       showText = !showText;
-      if (showText) {
-        _controller.forward(); // Show overlay
-      } else {
-        _controller.reverse(); // Hide overlay
-      }
     });
   }
 
   void onPanStart(DragStartDetails details) {
     setState(() {
-      startDragOffset = details.globalPosition; // Record the drag start position
+      startDragOffset = details.globalPosition;
     });
   }
 
   void onPanUpdate(DragUpdateDetails details) {
     setState(() {
-      // Calculate the new offset based on the drag delta
       cardOffset = details.globalPosition - startDragOffset;
     });
   }
 
   void onPanEnd(DragEndDetails details) {
     if (cardOffset.dx > 150) {
-      widget.onSwipeRight();
+      _animateCardOffScreen(1, widget.onSwipeRight); // Swipe right
     } else if (cardOffset.dx < -150) {
-      widget.onSwipeLeft();
+      _animateCardOffScreen(-1, widget.onSwipeLeft); // Swipe left
     } else {
+      _animateCardBack(); // Reset card to center
+    }
+  }
+
+  void _animateCardOffScreen(int direction, VoidCallback onSwipe) {
+    setState(() {
+      isSwipingAway = true; // Mark as swiping away
+    });
+
+    _resetAnimation = Tween<Offset>(
+      begin: cardOffset,
+      end: Offset(cardOffset.dx + (direction * 300), cardOffset.dy),
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
+
+    _fadeAnimation = Tween<double>(begin: 1.0, end: 0.0)
+        .animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
+
+    _controller.reset();
+    _controller.forward().whenComplete(() {
+      onSwipe(); // Trigger the swipe callback
       setState(() {
         cardOffset = Offset.zero;
+        cardOpacity = 1.0; // Reset opacity for the next card
+        isSwipingAway = false; // Reset swiping state
       });
-    }
+    });
+  }
+
+  void _animateCardBack() {
+    setState(() {
+      isSwipingAway = false; // Ensure fade-out is disabled
+    });
+
+    _resetAnimation = Tween<Offset>(begin: cardOffset, end: Offset.zero)
+        .animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
+
+    _controller.reset();
+    _controller.forward().whenComplete(() {
+      setState(() {
+        cardOpacity = 1.0; // Ensure card stays fully visible
+      });
+    });
   }
 
   @override
@@ -97,33 +143,36 @@ class _SwipeCardWidgetState extends State<SwipeCardWidget>
     final screenWidth = MediaQuery.of(context).size.width;
 
     // Calculate rotation angle based on horizontal offset
-    final rotationAngle = cardOffset.dx / screenWidth * 0.4; // Adjust multiplier for effect
+    final rotationAngle = cardOffset.dx / screenWidth * 0.4;
 
     return GestureDetector(
       onPanStart: onPanStart,
       onPanUpdate: onPanUpdate,
       onPanEnd: onPanEnd,
-      child: Stack(
-        alignment: Alignment.center,
-        clipBehavior: Clip.hardEdge,
-        children: [
-          // Apply the same transformations to the card and the overlay
-          Transform.translate(
-            offset: cardOffset,
-            child: Transform.rotate(
-              angle: rotationAngle,
-              child: _buildCard(),
-            ),
-          ),
-          if (showText)
+      child: Opacity(
+        opacity: cardOpacity,
+        child: Stack(
+          alignment: Alignment.center,
+          clipBehavior: Clip.hardEdge,
+          children: [
+            // Apply the same transformations to the card and the overlay
             Transform.translate(
               offset: cardOffset,
               child: Transform.rotate(
                 angle: rotationAngle,
-                child: _buildTextOverlay(),
+                child: _buildCard(),
               ),
             ),
-        ],
+            if (showText)
+              Transform.translate(
+                offset: cardOffset,
+                child: Transform.rotate(
+                  angle: rotationAngle,
+                  child: _buildTextOverlay(),
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }
@@ -139,7 +188,7 @@ class _SwipeCardWidgetState extends State<SwipeCardWidget>
           year: widget.year,
         ),
         Positioned(
-          bottom: 10, // Position at the bottom of the card
+          bottom: 10,
           child: ElevatedButton(
             onPressed: toggleTextVisibility,
             style: ElevatedButton.styleFrom(
@@ -163,13 +212,13 @@ class _SwipeCardWidgetState extends State<SwipeCardWidget>
 
   Widget _buildTextOverlay() {
     return Align(
-      alignment: Alignment.center, // Center the overlay on the card
+      alignment: Alignment.center,
       child: TextOverlay(
         title: widget.title,
         description: widget.description,
-        fadeAnimation: _fadeAnimation,
-        slideAnimation: _slideAnimation,
-        onClose: toggleTextVisibility, // Close when the overlay is dismissed
+        fadeAnimation: _controller,
+        slideAnimation: _resetAnimation,
+        onClose: toggleTextVisibility,
       ),
     );
   }
