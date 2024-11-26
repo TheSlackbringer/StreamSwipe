@@ -15,7 +15,7 @@ class GoogleSignInButton extends StatelessWidget {
 
     // Define platform-specific dimensions and paddings
     final double buttonHeight = isIOS ? 44.0 : 40.0;
-    final double buttonWidth = 180; // Keep width consistent
+    final double buttonWidth = 200.0; // Keep width consistent
     final double horizontalPadding = isIOS ? 16.0 : 12.0;
     final double iconTextSpacing = isIOS ? 12.0 : 10.0;
     final double iconSize = 20.0; // Logo size remains 20px
@@ -40,13 +40,14 @@ class GoogleSignInButton extends StatelessWidget {
           elevation: 0,
         ),
         child: Row(
-          mainAxisAlignment: MainAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.center, // Center the content
           mainAxisSize: MainAxisSize.max,
           children: [
             // Icon with fixed size
             Container(
               width: iconSize,
               height: iconSize,
+              // Space between icon and text
               margin: EdgeInsets.only(right: iconTextSpacing),
               child: SvgPicture.string(
                 '''<svg version="1.1" xmlns="http://www.w3.org/2000/svg" 
@@ -83,7 +84,7 @@ class GoogleSignInButton extends StatelessWidget {
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
-            Spacer(), // Push content to the left
+            // Remove Spacer(), no longer needed
           ],
         ),
       ),
