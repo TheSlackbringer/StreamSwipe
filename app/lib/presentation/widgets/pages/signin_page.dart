@@ -80,7 +80,7 @@ class _SignInScreenState extends State<SignInScreen> {
           children: [
             const SizedBox(height: 50),
             Text(
-              'Welcome Back!',
+              'StreamSwipe',
               style: theme.textTheme.headlineMedium,
             ),
             const SizedBox(height: 20),
