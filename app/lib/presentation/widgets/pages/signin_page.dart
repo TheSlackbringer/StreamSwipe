@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_svg/svg.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:stream_swipe/infrastructure/services/secret_service.dart';
 import 'dart:io' show Platform;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../dependency_injection.dart';
 import '../custom_components/custom_button.dart';
 
 class SignInScreen extends StatefulWidget {
@@ -15,6 +18,8 @@ class SignInScreen extends StatefulWidget {
 
 class _SignInScreenState extends State<SignInScreen> {
   final supabase = Supabase.instance.client;
+  final SecretService _secretService = getIt<SecretService>();
+
   final bool isIOS = !kIsWeb && Platform.isIOS;
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
@@ -57,15 +62,67 @@ class _SignInScreenState extends State<SignInScreen> {
     }
   }
 
-  void _signInWithGoogle() {
-    // Placeholder for Google Sign-In functionality
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Google Sign-In not implemented')),
-    );
-  }
-
   void _navigateToSignUp() {
     // Navigator.pushNamed(context, '/signup');
+  }
+
+  Future<void> _signInWithGoogle() async {
+    try {
+      if (kIsWeb) {
+        // For Web, use Supabase OAuth flow
+        await supabase.auth.signInWithOAuth(OAuthProvider.google,
+            redirectTo: null, authScreenLaunchMode: LaunchMode.platformDefault);
+      } else {
+        // For Android/iOS, use native Google Sign-In
+        await _nativeGoogleSignIn();
+      }
+    } catch (error) {
+      // Handle errors gracefully
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Login failed: $error')),
+      );
+    }
+  }
+
+  Future<void> _nativeGoogleSignIn() async {
+    /// TODO: update the Web client ID with your own.
+    ///
+    /// Web Client ID that you registered with Google Cloud.
+    final webClientId =
+        '134356970331-hlncoo9qqs7d8ukn1mhpluo7jk1nnjsc.apps.googleusercontent.com';
+
+    /// TODO: update the iOS client ID with your own.
+    ///
+    /// iOS Client ID that you registered with Google Cloud.
+    final iosClientId =
+        '134356970331-4i6a8hbcm7itmkrb4pp5r8cgd5ch04ls.apps.googleusercontent.com';
+    final androidClientId =
+        '134356970331-unrnofs3phobpnh53hrmkimopvs9on2o.apps.googleusercontent.com';
+
+    final GoogleSignIn googleSignIn = GoogleSignIn(
+      clientId: Platform.isIOS ? iosClientId : androidClientId,
+      serverClientId: webClientId,
+    );
+    final googleUser = await googleSignIn.signIn();
+    final googleAuth = await googleUser!.authentication;
+    final accessToken = googleAuth.accessToken;
+    final idToken = googleAuth.idToken;
+
+    if (accessToken == null) {
+      throw 'No Access Token found.';
+    }
+    if (idToken == null) {
+      throw 'No ID Token found.';
+    }
+
+    await supabase.auth.signInWithIdToken(
+      provider: OAuthProvider.google,
+      idToken: idToken,
+      accessToken: accessToken,
+    );
+    if (supabase.auth.currentSession != null) {
+      Navigator.pushReplacementNamed(context, '/home');
+    }
   }
 
   @override
@@ -114,8 +171,8 @@ class _SignInScreenState extends State<SignInScreen> {
             ),
             const SizedBox(height: 20),
             CustomButton(
-                onPressed: _signInWithEmail,
-                 text: 'Sign In',
+              onPressed: _signInWithEmail,
+              text: 'Sign In',
             ),
 
             const SizedBox(height: 10),

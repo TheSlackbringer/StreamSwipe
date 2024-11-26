@@ -55,6 +55,20 @@
           <string>com.googleusercontent.apps.134356970331-4i6a8hbcm7itmkrb4pp5r8cgd5ch04ls</string>
         </array>
       </dict>
+      <dict>
+          <key>CFBundleTypeRole</key>
+          <string>Editor</string>
+          <key>CFBundleURLSchemes</key>
+          <array>
+            <string>streamswipe</string>
+          </array>
+           <key>CFBundleURLName</key>
+           <string>com.streamswipe.streamSwipe</string>
+       </dict>
+    </array>
+    <key>LSApplicationQueriesSchemes</key>
+    <array>
+      <string>streamswipe</string> <!-- Add the new deep link scheme -->
     </array>
 </dict>
 </plist>
