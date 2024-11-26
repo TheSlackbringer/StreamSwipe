@@ -1,7 +1,10 @@
-import 'package:stream_swipe/presentation/dependency_injection.dart';
-import 'package:stream_swipe/presentation/widgets/bottom_navigation_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+
+import 'presentation/dependency_injection.dart';
+import 'presentation/widgets/bottom_navigation_bar.dart';
+import 'presentation/widgets/pages/auth_guard.dart';
+import 'presentation/widgets/pages/signin_page.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -19,6 +22,7 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
+    final supabase = Supabase.instance.client;
     return MaterialApp(
       title: 'Flutter Demo',
       theme: ThemeData(
@@ -39,9 +43,22 @@ class MyApp extends StatelessWidget {
         // tested with just a hot reload.
         colorScheme: ColorScheme.fromSwatch( primarySwatch: Colors.grey,
             brightness: Brightness.dark),
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.orange, // Set default color to orange
+            foregroundColor: Colors.white, // Set text color
+          ),
+        ),
         useMaterial3: true,
       ),
-      home: const BottomNavBar(),
+      initialRoute: supabase.auth.currentSession != null
+          ? '/home'
+          : '/signin',
+      routes: {
+        '/signin': (context) => const SignInScreen(),
+      //  '/signup': (context) => const SignInScreen(),
+        '/home': (context) => const AuthGuard(child: BottomNavBar()),
+      },
     );
   }
 }
