@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../infrastructure/repositories/region_repository.dart';
+import '../../../infrastructure/repositories/watch_provider_repository.dart';
 import '../../dependency_injection.dart';
 import 'swipe_card.dart';
-import '../../../domain/local_user.dart';
+import '../../../domain/profile.dart';
 
 class SwipeCardsWidget extends StatefulWidget {
-  final LocalUser user;
+  final Profile profile;
 
-  const SwipeCardsWidget({required this.user, super.key});
+  const SwipeCardsWidget({required this.profile, super.key});
 
   @override
   _SwipeCardsWidgetState createState() => _SwipeCardsWidgetState();
@@ -37,8 +38,8 @@ class _SwipeCardsWidgetState extends State<SwipeCardsWidget> {
       final response = await _supabase.functions.invoke(
         'get_movies',
         queryParameters: {
-          'watch_providers': widget.user.watchProviders.join('|'),
-          'region': await _regionRepository.getIsoCode(widget.user.country) ?? 'US'
+          'watch_providers': widget.profile.watchProviders.map((p) => p.providerId).join('|'),
+          'region': await _regionRepository.getIsoCode(widget.profile.country!) ?? 'US'
         },
       );
 
@@ -128,7 +129,10 @@ class _SwipeCardsWidgetState extends State<SwipeCardsWidget> {
                 },
               ),
             );
-          }).toList().reversed.toList(),
+          })
+              .toList()
+              .reversed
+              .toList(),
         ),
       ),
     );

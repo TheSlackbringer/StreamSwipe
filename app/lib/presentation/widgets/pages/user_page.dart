@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
-import '../../../domain/local_user.dart';
-import '../../../infrastructure/repositories/local_user_repository.dart';
+import 'package:stream_swipe/infrastructure/repositories/watch_provider_repository.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../../domain/profile.dart';
+import '../../../infrastructure/repositories/profile_repository.dart';
 import '../../../infrastructure/repositories/region_repository.dart';
 import '../../dependency_injection.dart';
 
@@ -12,9 +14,12 @@ class UserSetupPage extends StatefulWidget {
 }
 
 class _UserSetupPageState extends State<UserSetupPage> {
-  final userRepository = getIt<LocalUserRepository>();
-  final regionRepository = getIt<RegionRepository>();
+  final ProfileRepository _profileRepository = getIt<ProfileRepository>();
+  final WatchProvidersRepository _watchProvidersRepository = getIt<WatchProvidersRepository>();
 
+  final RegionRepository _regionRepository = getIt<RegionRepository>();
+
+  late Profile user; // The user profile available across the page
   String? selectedCountry; // Currently selected country
   List<String> availableCountries = []; // List of countries for selection
   bool isLoading = true; // To show a loading state
@@ -22,28 +27,25 @@ class _UserSetupPageState extends State<UserSetupPage> {
   @override
   void initState() {
     super.initState();
-    _loadData();
+    _initializeUserSetup();
   }
 
-  /// Load available countries and user data
-  Future<void> _loadData() async {
+  /// Initialize user setup by loading user data and regions
+  Future<void> _initializeUserSetup() async {
     setState(() {
       isLoading = true;
     });
 
     try {
-      // Ensure the region map is cached and fetch available countries
-      final regionMap = await regionRepository.ensureRegionMap();
+      // Load the logged-in user's profile
+      user = (await _profileRepository.getProfile(Supabase.instance.client.auth.currentUser!.id)!)!;
+
+      // Load the available regions
+      final regionMap = await _regionRepository.ensureRegionMap();
       availableCountries = regionMap.keys.toList();
 
-      // Load the saved user (if any)
-      final user = await userRepository.getUser();
-      selectedCountry = user?.country;
-    } catch (error) {
-      // Handle error fetching the region map
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error loading regions: $error')),
-      );
+      // Preselect the user's country if available
+      selectedCountry = user.country;
     } finally {
       setState(() {
         isLoading = false;
@@ -51,13 +53,21 @@ class _UserSetupPageState extends State<UserSetupPage> {
     }
   }
 
-  /// Save the selected country to the user repository
+  /// Save the selected country to the user's profile
   Future<void> _saveCountry() async {
     if (selectedCountry != null) {
-      // Save the user
-      final user = LocalUser(country: selectedCountry!, watchProviders: []);
-      await userRepository.saveUser(user);
+      user.country = selectedCountry;
 
+      // Save the updated profile
+      await _profileRepository.saveProfile(user);
+      await _watchProvidersRepository.deleteWatchProviders(user.id);
+
+
+
+      // Show a success message
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Country saved successfully!')),
+      );
     }
   }
 

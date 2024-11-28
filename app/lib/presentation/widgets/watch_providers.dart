@@ -1,18 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:stream_swipe/domain/local_user.dart';
+import 'package:stream_swipe/infrastructure/repositories/watch_provider_repository.dart';
 import 'package:stream_swipe/infrastructure/services/watch_provider_service.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../domain/profile.dart';
 import '../../infrastructure/repositories/local_user_repository.dart';
 import '../../infrastructure/repositories/region_repository.dart';
 import '../dependency_injection.dart';
 
 class ProviderSelectionWidget extends StatefulWidget {
-  final LocalUser user;
+  final Profile profile;
   final VoidCallback onProvidersSelected;
 
   const ProviderSelectionWidget({
-    required this.user,
+    required this.profile,
     required this.onProvidersSelected,
     super.key,
   });
@@ -23,6 +25,9 @@ class ProviderSelectionWidget extends StatefulWidget {
 
 class _ProviderSelectionWidgetState extends State<ProviderSelectionWidget> {
   final WatchProviderService _watchProviderService = getIt<WatchProviderService>();
+  final WatchProvidersRepository _watchProvidersRepository = getIt<WatchProvidersRepository>();
+
+
 
   final _supabase = Supabase.instance.client;
   List<Map<String, dynamic>> _availableProviders = [];
@@ -41,7 +46,7 @@ class _ProviderSelectionWidgetState extends State<ProviderSelectionWidget> {
     });
 
     try {
-      final selectedCountry = widget.user.country;
+      final selectedCountry = widget.profile.country!;
 
       final providers = await _watchProviderService.fetchProviders(selectedCountry);
 
@@ -58,13 +63,10 @@ class _ProviderSelectionWidgetState extends State<ProviderSelectionWidget> {
   }
 
   Future<void> _saveSelectedProviders() async {
-    final localUserRepo = getIt<LocalUserRepository>();
 
     // Update the user's watchProviders
-    widget.user.watchProviders = _selectedProviders.toList();
-
     // Save the updated user
-    await localUserRepo.saveUser(widget.user);
+    await _watchProvidersRepository.saveWatchProviders(widget.profile.id, _selectedProviders.toList());
 
     // Notify the parent widget to refresh
     widget.onProvidersSelected();
